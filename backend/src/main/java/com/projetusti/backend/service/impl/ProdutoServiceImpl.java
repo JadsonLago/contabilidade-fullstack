@@ -2,18 +2,23 @@ package com.projetusti.backend.service.impl;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.projetusti.backend.model.Produto;
 import com.projetusti.backend.repository.ProdutoRepository;
 import com.projetusti.backend.service.ProdutoService;
 
+@Service
 public class ProdutoServiceImpl implements ProdutoService{
 
     private final ProdutoRepository repository;
 
+    
     // Injeção de dependência via construtor (melhor prática)
     public ProdutoServiceImpl(ProdutoRepository repository) {
         this.repository = repository;
     }
+
 
     @Override
     public List<Produto> listarTodos() {
