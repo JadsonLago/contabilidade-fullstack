@@ -1,40 +1,65 @@
 import React from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import axios from 'axios'
+import FormularioProduto from './FormularioProduto';
+
 
 function ListaDeProdutos() {
-// 1. O estado começa como um array vazio para guardar os produtos.
+  // O estado começa como um array vazio para guardar os produtos.
   const [produtos, setProdutos] = useState([]);
 
-// 2. Este efeito roda APENAS UMA VEZ após a primeira renderização.
-useEffect(() => {
-  // Usamos a função 'fetch' do navegador para chamar sua API
-  fetch('http://localhost:8080/produtos') // <-- SUBSTITUA PELA URL DA SUA API
-    .then(response => response.json()) // Converte a resposta para o formato JSON
-    .then(data => {
-      console.log('Dados recebidos da API:', data);
-      // 3. A MÁGICA: Atualizamos o estado com os dados que chegaram da API.
-      setProdutos(data);
-      
-    })
-    .catch(error => console.error("Houve um erro ao buscar os dados:", error)); // Sempre bom tratar erros
-    
-}, []); // O array vazio [] garante que isso só aconteça uma vez.  
+  // 1. Extraímos a lógica de busca para uma função própria
+  const buscarProdutos = useCallback(() => {
+    axios.get('http://localhost:8080/produtos')
+      .then(response => {
+        setProdutos(response.data);
+      })
+      .catch(error => console.error("Houve um erro ao buscar os dados:", error));
+  }, []); // useCallback para otimização
+
+  // 2. O useEffect agora apenas chama essa função na primeira vez
+  useEffect(() => {
+    buscarProdutos();
+  }, [buscarProdutos]);
+
+  const handleDelete = (id) => {
+    // Dica de UX: Pedir confirmação antes de uma ação destrutiva
+    const confirmar = window.confirm("Tem certeza que deseja excluir este item?");
+
+    if (confirmar) {
+      axios.delete(`http://localhost:8080/produtos/${id}`)
+        .then(() => {
+          console.log('Produto excluído com sucesso!');
+          
+          // A MÁGICA: Após excluir, busca a lista atualizada de produtos
+          buscarProdutos();
+        })
+        .catch(error => {
+          console.error('Erro ao excluir produto:', error);
+        });
+    }
+  };
 
   return (
     <>
-    <div>
-      <h1>ListaDeProdutos</h1>
-      <ul>
-        {/*
+      <div>
+        {/* 3. Passamos a função 'buscarProdutos' como prop para o formulário */}
+        <FormularioProduto onProdutoAdicionado={buscarProdutos} />
+
+        <hr />
+
+        <h1>ListaDeProdutos</h1>
+        <ul>
+          {/*
           Na 1ª renderização, 'usuarios' está vazio.
           Após o fetch, o estado é atualizado, o componente re-renderiza,
           e agora 'usuarios' tem os dados para o .map() exibir.
         */}
-        {produtos.map(produto => (
-          <li key={produto.id}>{produto.nome} | {produto.tipo} | {produto.data} | {produto.valor} | {produto.ativo ? 'Sim' : 'Não'} </li> // Assumindo que cada usuário tem um 'id' e 'nome'
-        ))}
-      </ul>
-    </div>
+          {produtos.map(produto => (
+            <li key={produto.id}>{produto.nome} | {produto.tipo} | {produto.data} | {produto.valor} | {produto.ativo ? 'Sim' : 'Não'} <button onClick={(e) => handleEdit(produto.id)}>Editar</button> <button onClick={(e) => handleDelete(produto.id)}>Excluir</button></li> // Assumindo que cada usuário tem um 'id' e 'nome'
+          ))}
+        </ul>
+      </div>
     </>
   )
 }

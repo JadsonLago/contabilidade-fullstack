@@ -3,6 +3,7 @@ package com.projetusti.backend.model;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,8 +16,11 @@ public class Produto {
     private Long id;
 
     private LocalDate data;
+    @Column(nullable = false)
     private String nome;
+    @Column(nullable = false)
     private Double valor;
+    @Column(nullable = false)
     private String tipo;
     private Boolean ativo;
     
